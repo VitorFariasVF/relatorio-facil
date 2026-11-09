@@ -246,9 +246,14 @@
 
   function open(doc, sample, msg) {
     S.doc = doc; S.doc.sample = !!sample; S.sel = null; S.hist = []; S.redo = []; S.lastKey = ""; S.exported = true;
-    $("#start").hidden = true; $("#editor").hidden = false; $("#themesel").value = doc.theme || "editorial";
+    $("#themesel").value = doc.theme || "editorial";
     setTab("edit"); afterChange(true); saveDraft(); say(msg || "Relatório aberto.");
-    const f = $(".bsel"); if (f) f.focus({ preventScroll: true });
+    swapView($("#start"), $("#editor"), () => { const f = $(".bsel"); if (f) f.focus({ preventScroll: true }); });
+  }
+  /* Troca de tela com fade-out/fade-in (motion.js do VF Tools); sem ele, troca direto */
+  function swapView(out, inn, done) {
+    if (window.VFMotion) return VFMotion.swap(out, inn, done);
+    out.hidden = true; inn.hidden = false; if (done) done();
   }
 
   /* ---------- Desenho do editor ---------- */
@@ -481,7 +486,8 @@
   };
   $("#newdoc").onclick = () => {
     if (!confirm("Voltar ao início? O rascunho continua salvo neste navegador.")) return;
-    S.doc = null; $("#editor").hidden = true; $("#start").hidden = false; buildStart(); $("#tpls .tpl").focus();
+    S.doc = null; buildStart();
+    swapView($("#editor"), $("#start"), () => $("#tpls .tpl").focus());
   };
   $("#resetdata").onclick = () => { if (confirm("Isso remove o rascunho, os modelos salvos e as preferências desta ferramenta neste navegador. Continuar?")) { T.clear(); S.draftFail = false; setDraftStatus(""); buildStart(); T.toast("Dados apagados."); } };
   $("#y").textContent = new Date().getFullYear();
