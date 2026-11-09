@@ -5,7 +5,7 @@ Transforme uma planilha em um relatório com indicadores, gráficos e tabelas, p
 Parte do [VF Tools](https://vitorfariasvf.github.io/VF-Tools/). Segue o [padrão de design](https://github.com/VitorFariasVF/VF-Tools/blob/Main/DESIGN.md) do site.
 
 ## Como funciona
-1. **Escolha um modelo** (semanal, vendas, estudo) ou comece em branco. Os modelos já vêm com dados de exemplo.
+1. **Escolha como começar:** *Montar do zero* (você monta o fluxo bloco a bloco), *Assistente passo a passo* (dados → tipo de relatório → capa → revisão), um modelo pronto (semanal, vendas, estudo) ou um dos **seus modelos salvos**. Os modelos prontos já vêm com dados de exemplo.
 2. **Cole seus dados** em "Editar dados": tabela copiada do Excel/Google Planilhas ou arquivo CSV. Números no formato brasileiro (`1.234,56`, `R$ 12,50`, `12%`) são entendidos.
 3. **Monte o relatório em blocos:** título/capa, texto, indicadores (KPIs), tabela, gráfico de barras ou linhas e quebra de página. Reordene com *Subir*, *Descer* ou o campo *Posição* (arrastar não é necessário).
 4. **Veja a folha A4 ao vivo.** As linhas tracejadas mostram onde a página costuma terminar.
@@ -16,6 +16,7 @@ Parte do [VF Tools](https://vitorfariasvf.github.io/VF-Tools/). Segue o [padrão
 - Gráficos em SVG feitos à mão, sem biblioteca. Séries se distinguem por padrão, traço e marcador (não só por cor). Cada gráfico vem com **resumo em texto** e **tabela de dados** para leitores de tela.
 - Desfazer/refazer (Ctrl+Z), rascunho automático no navegador (até 1 MB) e aviso quando a memória do navegador enche.
 - Dois temas para a folha (Editorial e Sóbrio). A folha é sempre clara, mesmo no tema escuro do site.
+- **Meus modelos:** "Salvar como modelo" guarda o relatório no navegador (até 12); reutilize, baixe como `.json` ou exclua. Mesmo nome atualiza o modelo.
 - Mascote Doggy com tour guiado.
 
 ## Limites

@@ -81,12 +81,167 @@
   /* ---------- Início ---------- */
   function buildStart() {
     const mini = n => `<div class="mini" aria-hidden="true">${[40, 70, 55, 90, 62].slice(0, n).map(h => `<s style="height:${h}%"></s>`).join("")}</div>`;
-    $("#tpls").innerHTML = TP.list.map(t => `<button class="tpl" type="button" data-tpl="${t.id}">${mini(t.id === "vendas" ? 5 : t.id === "semanal" ? 4 : 3)}<b>${esc(t.name)}</b><span>${esc(t.desc)}</span><i>Usar este modelo →</i></button>`).join("") +
-      `<button class="tpl" type="button" data-tpl="branco"><div class="mini" aria-hidden="true"></div><b>Começar em branco</b><span>Só um título e um texto. Você cola os dados e monta o resto.</span><i>Começar →</i></button>`;
+    $("#tpls").innerHTML = TP.list.map(t => `<button class="tpl" type="button" data-tpl="${t.id}">${mini(t.id === "vendas" ? 5 : t.id === "semanal" ? 4 : 3)}<b>${esc(t.name)}</b><span>${esc(t.desc)}</span><i>Usar este modelo →</i></button>`).join("");
     const d = T.get("draft", null); $("#resume").hidden = !(d && d.doc && Array.isArray(d.doc.blocks));
     if (!$("#resume").hidden) $("#resume").textContent = "Continuar o rascunho (" + new Date(d.at).toLocaleDateString("pt-BR") + ")";
+    renderMy();
   }
-  $("#tpls").addEventListener("click", e => { const b = e.target.closest("[data-tpl]"); if (!b) return; const k = b.dataset.tpl; open(TP.make(k), k !== "branco", `Modelo “${(TP.list.find(t => t.id === k) || { name: "em branco" }).name}” carregado.`); });
+  const startClick = e => {
+    const w = e.target.closest("[data-mode=wizard]"); if (w) { wizOpen(w); return; }
+    const b = e.target.closest("[data-tpl]"); if (!b) return; const k = b.dataset.tpl;
+    open(TP.make(k), k !== "branco", k === "branco" ? "Relatório em branco. Adicione os blocos que quiser." : `Modelo “${(TP.list.find(t => t.id === k) || { name: "" }).name}” carregado.`);
+  };
+  $("#tpls").addEventListener("click", startClick); $("#modes").addEventListener("click", startClick);
+
+  /* ---------- Meus modelos (salvos neste navegador) ---------- */
+  const TPL_MAX = 12, TPL_BYTES = 250 * 1024;
+  const myTpls = () => { const a = T.get("templates", []); return Array.isArray(a) ? a : []; };
+  function storeTpls(a) {
+    T.set("templates", a); let ok = false;
+    try { ok = JSON.stringify(JSON.parse(localStorage.getItem(KEYSTORE) || "{}").templates || []) === JSON.stringify(a); } catch { }
+    return ok;
+  }
+  function renderMy() {
+    const a = myTpls(); $("#mytpls").hidden = !a.length;
+    $("#mylist").innerHTML = a.map(t => `<div class="myc" data-id="${esc(t.id)}" role="group" aria-label="Modelo ${esc(t.name)}"><b>${esc(t.name)}</b><span>${t.doc.blocks.length} ${t.doc.blocks.length === 1 ? "bloco" : "blocos"} · salvo em ${new Date(t.at).toLocaleDateString("pt-BR")}</span>
+      <div class="row"><button class="btn primary" type="button" data-my="use" aria-label="Usar o modelo ${esc(t.name)}">Usar</button><button class="btn" type="button" data-my="dl" aria-label="Baixar o modelo ${esc(t.name)} (.json)">Baixar</button><button class="btn danger" type="button" data-my="del" aria-label="Excluir o modelo ${esc(t.name)}">Excluir</button></div></div>`).join("");
+  }
+  $("#mylist").addEventListener("click", async e => {
+    const c = e.target.closest(".myc"), act = e.target.closest("[data-my]"); if (!c || !act) return;
+    const a = myTpls(), t = a.find(x => x.id === c.dataset.id); if (!t) return;
+    if (act.dataset.my === "use") { const v = validate({ app: "relatorio-facil", doc: t.doc }); if (v.ok) open(v.doc, true, `Modelo “${t.name}” aberto. Cole os seus dados em “Editar dados”.`); else showAlert("Não consegui abrir esse modelo."); }
+    else if (act.dataset.my === "dl") { await deliver(new Blob([JSON.stringify({ app: "relatorio-facil", version: 1, kind: "template", name: t.name, doc: t.doc })], { type: "application/json" }), R.slug(t.name) + ".modelo.json"); say("Modelo baixado."); }
+    else if (act.dataset.my === "del") {
+      if (!confirm(`Excluir o modelo “${t.name}”? Não dá para desfazer.`)) return;
+      storeTpls(a.filter(x => x.id !== t.id)); renderMy(); say(`Modelo “${t.name}” excluído.`);
+      const nx = $("#mylist [data-my=use]") || $("[data-mode=wizard]"); if (nx) nx.focus();
+    }
+  });
+  const tdlg = $("#tpldlg");
+  $("#savetpl").onclick = () => { $("#tp-err").textContent = ""; $("#tp-name").value = R.titleOf(S.doc) === "Relatório" ? "" : R.titleOf(S.doc); tdlg.showModal(); $("#tp-name").focus(); };
+  $("#tp-cancel").onclick = () => tdlg.close();
+  $("#tp-name").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#tp-save").click(); } });
+  $("#tp-save").onclick = () => {
+    const name = $("#tp-name").value.trim(), err = $("#tp-err"); if (!name) { err.textContent = "Dê um nome ao modelo."; $("#tp-name").focus(); return; }
+    const a = myTpls(), same = a.find(x => x.name.toLowerCase() === name.toLowerCase());
+    if (!same && a.length >= TPL_MAX) { err.textContent = `Você já tem ${TPL_MAX} modelos. Exclua algum na tela inicial para salvar outro.`; return; }
+    const data = JSON.parse(JSON.stringify(S.doc.data)); let trimmed = false;
+    if (JSON.stringify(data).length > TPL_BYTES) { data.rows = data.rows.slice(0, 20); trimmed = true; }
+    const entry = { id: same ? same.id : "t" + Date.now(), name, at: Date.now(), doc: { theme: S.doc.theme, data, blocks: JSON.parse(JSON.stringify(S.doc.blocks)) } };
+    const next = same ? a.map(x => x.id === same.id ? entry : x) : [...a, entry];
+    if (!storeTpls(next)) { err.textContent = "Não consegui guardar o modelo (memória do navegador cheia). Use “Baixar” no projeto ou apague outros modelos."; return; }
+    tdlg.close(); T.toast(same ? "Modelo atualizado." : "Modelo salvo."); say(`Modelo “${name}” ${same ? "atualizado" : "salvo"}.` + (trimmed ? " Guardei só as 20 primeiras linhas dos dados como exemplo." : "") + " Ele aparece em “Meus modelos” na tela inicial.");
+  };
+  tdlg.addEventListener("close", () => { const b = $("#savetpl"); if (b && !$("#editor").hidden) b.focus(); });
+
+  /* ---------- Assistente passo a passo ---------- */
+  const wz = $("#wizdlg"), WST = ["Seus dados", "Sobre o relatório", "O que destacar", "Revisão"], FNL = { sum: "Soma", avg: "Média", max: "Máximo", min: "Mínimo", last: "Último", change: "Variação %" };
+  let W = null, wT = 0;
+  function wizOpen(opener) {
+    W = { step: 1, ds: null, opener, tuned: false, kpi: { on: true, cols: {} }, chart: { on: true, type: "bar", x: "", y: [] }, table: { on: true, cols: [], limit: 10 }, text: { on: true, heading: "Análise", body: "" }, cover: false };
+    $("#wz-text").value = ""; const st = $("#wz-status"); st.textContent = ""; st.className = "dstatus"; $("#wz-err").textContent = "";
+    ["wz-title", "wz-sub", "wz-author", "wz-date"].forEach(id => { $("#" + id).value = ""; }); $("#wz-cover").checked = false;
+    wizShow(1); wz.showModal(); $("#wz-text").focus();
+  }
+  function wizData() {
+    const r = D.parse($("#wz-text").value), st = $("#wz-status");
+    if (!$("#wz-text").value.trim()) { W.ds = null; st.textContent = ""; st.className = "dstatus"; return; }
+    if (!r.ok) { W.ds = null; st.textContent = r.error; st.className = "dstatus err"; return; }
+    W.ds = { name: "Dados", header: r.header, rows: r.rows }; W.tuned = false;
+    const nn = D.types(r.header, r.rows).filter(t => t === "num").length;
+    st.textContent = `Entendi: ${r.rows.length.toLocaleString("pt-BR")} linhas × ${r.header.length} colunas (${nn} numéricas).`; st.className = "dstatus ok";
+  }
+  $("#wz-text").addEventListener("input", () => { clearTimeout(wT); wT = setTimeout(wizData, 250); });
+  $("#wz-example").onclick = () => { const ex = TP.make("vendas").data; $("#wz-text").value = D.toCsv(ex.header, ex.rows, ";"); wizData(); $("#wz-text").focus(); say("Dados de exemplo carregados."); };
+  $("#wz-pick").onclick = () => { const f = $("#wzfile"); f.value = ""; f.click(); };
+  $("#wzfile").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return; const st = $("#wz-status");
+    if (f.size > D.LIM.bytes) { st.textContent = `“${f.name}” tem mais de 2 MB, acima do limite. Reduza a tabela e tente de novo.`; st.className = "dstatus err"; return; }
+    try { $("#wz-text").value = await f.text(); } catch { st.textContent = "Não consegui ler esse arquivo."; st.className = "dstatus err"; return; }
+    wizData();
+  };
+  function wizShow(n) {
+    W.step = n; $$(".wz-pane", wz).forEach(p => { p.hidden = +p.dataset.step !== n; });
+    $("#wz-step").textContent = `· Passo ${n} de 4: ${WST[n - 1]}`; $("#wz-back").disabled = n === 1; $("#wz-next").textContent = n === 4 ? "Criar relatório" : "Próximo"; $("#wz-err").textContent = "";
+    if (n === 3) wizOptions(); if (n === 4) wizReview();
+    say(`Passo ${n} de 4: ${WST[n - 1]}.`);
+  }
+  function wizOptions() {
+    const ds = W.ds, ty = D.types(ds.header, ds.rows), nums = ds.header.filter((_, i) => ty[i] === "num"), cat = ds.header.find((_, i) => ty[i] === "text") || ds.header[0], vals = nums.filter(c => c !== cat);
+    if (!W.tuned) {
+      W.tuned = true; W.kpi.cols = {}; vals.slice(0, 3).forEach(c => { W.kpi.cols[c] = "sum"; }); W.kpi.on = vals.length > 0;
+      W.chart = { on: vals.length > 0, type: /m[eê]s|data|dia|ano|semana|per[ií]odo|trimestre/i.test(cat) ? "line" : "bar", x: cat, y: vals.slice(0, 1) };
+      W.table = { on: true, cols: ds.header.slice(0, 6), limit: 10 };
+    }
+    const sel = (id, opts, cur) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${esc(v)}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const none = !vals.length ? `<p class="muted">Seus dados não têm colunas numéricas: indicadores e gráfico precisam de números.</p>` : "";
+    $("#wz-opts").innerHTML = `
+      <fieldset><legend>Indicadores (números em destaque)</legend>${none}
+        <label class="chk"><input type="checkbox" id="wo-kpi-on"${W.kpi.on ? " checked" : ""}${vals.length ? "" : " disabled"}> Incluir indicadores (até 4)</label>
+        <div class="sub">${vals.map((c, i) => `<div class="two"><label class="chk"><input type="checkbox" data-kc="${esc(c)}"${W.kpi.cols[c] ? " checked" : ""}> ${esc(c)}</label><div class="field"><label class="sr-only" for="wo-fn-${i}">Cálculo para ${esc(c)}</label>${sel("wo-fn-" + i, Object.entries(FNL), W.kpi.cols[c] || "sum").replace("<select", `<select data-kf="${esc(c)}"`)}</div></div>`).join("")}</div></fieldset>
+      <fieldset><legend>Gráfico</legend>${none}
+        <label class="chk"><input type="checkbox" id="wo-ch-on"${W.chart.on ? " checked" : ""}${vals.length ? "" : " disabled"}> Incluir gráfico</label>
+        <div class="sub"><div class="two"><div class="field"><label for="wo-ch-type">Tipo</label>${sel("wo-ch-type", [["bar", "Barras"], ["line", "Linhas"]], W.chart.type)}</div>
+          <div class="field"><label for="wo-ch-x">Categorias (eixo horizontal)</label>${sel("wo-ch-x", ds.header.map(h => [h, h]), W.chart.x)}</div></div>
+          <fieldset><legend>Valores (até 4)</legend>${vals.map(c => `<label class="chk"><input type="checkbox" data-cy="${esc(c)}"${W.chart.y.includes(c) ? " checked" : ""}> ${esc(c)}</label>`).join("")}</fieldset></div></fieldset>
+      <fieldset><legend>Tabela</legend>
+        <label class="chk"><input type="checkbox" id="wo-tb-on"${W.table.on ? " checked" : ""}> Incluir tabela com os dados</label>
+        <div class="sub"><fieldset><legend>Colunas</legend>${ds.header.map(c => `<label class="chk"><input type="checkbox" data-tc="${esc(c)}"${W.table.cols.includes(c) ? " checked" : ""}> ${esc(c)}</label>`).join("")}</fieldset>
+          <div class="field"><label for="wo-tb-lim">Linhas a mostrar</label>${sel("wo-tb-lim", [[5, "5 linhas"], [10, "10 linhas"], [20, "20 linhas"], [50, "50 linhas"], [200, "Todas (até 200)"]].map(([v, l]) => [String(v), l]), String(W.table.limit))}</div></div></fieldset>
+      <fieldset><legend>Texto de análise</legend>
+        <label class="chk"><input type="checkbox" id="wo-tx-on"${W.text.on ? " checked" : ""}> Incluir uma seção de texto</label>
+        <div class="sub"><div class="field"><label for="wo-tx-h">Título da seção</label><input id="wo-tx-h" value="${esc(W.text.heading)}"></div>
+          <div class="field"><label for="wo-tx-b">Texto (opcional)</label><textarea id="wo-tx-b" rows="3">${esc(W.text.body)}</textarea></div></div></fieldset>`;
+  }
+  function wizRead() {
+    const g = id => $("#" + id, wz);
+    W.kpi.on = !!g("wo-kpi-on") && g("wo-kpi-on").checked; W.kpi.cols = {};
+    $$("[data-kc]", wz).forEach(c => { if (c.checked) W.kpi.cols[c.dataset.kc] = ($(`[data-kf="${CSS.escape(c.dataset.kc)}"]`, wz) || {}).value || "sum"; });
+    W.chart = { on: !!g("wo-ch-on") && g("wo-ch-on").checked, type: g("wo-ch-type").value, x: g("wo-ch-x").value, y: $$("[data-cy]:checked", wz).map(c => c.dataset.cy) };
+    W.table = { on: g("wo-tb-on").checked, cols: $$("[data-tc]:checked", wz).map(c => c.dataset.tc), limit: +g("wo-tb-lim").value };
+    W.text = { on: g("wo-tx-on").checked, heading: g("wo-tx-h").value, body: g("wo-tx-b").value };
+  }
+  function wizBlocks() {
+    const ds = W.ds, id = TP.newId, out = [];
+    out.push({ id: id(), type: "title", title: $("#wz-title").value.trim(), subtitle: $("#wz-sub").value.trim(), author: $("#wz-author").value.trim(), date: $("#wz-date").value.trim(), cover: $("#wz-cover").checked });
+    const kc = Object.entries(W.kpi.cols).slice(0, 4);
+    if (W.kpi.on && kc.length) out.push({ id: id(), type: "kpi", heading: "", items: kc.map(([c, fn]) => ({ label: `${FNL[fn]} de ${c}`, mode: "calc", fn, col: c, prefix: "", suffix: "", note: "" })) });
+    if (W.chart.on && W.chart.y.length) out.push({ id: id(), type: "chart", chart: W.chart.type, heading: `${W.chart.y.join(", ")} por ${W.chart.x}`, x: W.chart.x, y: W.chart.y.slice(0, 4), sort: "none", limit: 12 });
+    if (W.table.on && W.table.cols.length) out.push({ id: id(), type: "table", heading: "Dados", columns: W.table.cols, limit: W.table.limit || 10 });
+    if (W.text.on) out.push({ id: id(), type: "text", heading: W.text.heading, body: W.text.body });
+    return out;
+  }
+  function wizReview() {
+    const b = wizBlocks(), li = [];
+    li.push(`Título: “${esc(b[0].title)}”${b[0].cover ? " (capa em página inteira)" : ""}`);
+    b.slice(1).forEach(x => {
+      if (x.type === "kpi") li.push(`Indicadores: ${x.items.map(i => esc(i.label)).join("; ")}`);
+      if (x.type === "chart") li.push(`Gráfico de ${x.chart === "line" ? "linhas" : "barras"}: ${esc(x.y.join(", "))} por ${esc(x.x)}`);
+      if (x.type === "table") li.push(`Tabela com ${x.columns.length} ${x.columns.length === 1 ? "coluna" : "colunas"}, até ${x.limit} linhas`);
+      if (x.type === "text") li.push(`Texto: “${esc(x.heading)}”`);
+    });
+    $("#wz-review").innerHTML = li.map(t => `<li>${t}</li>`).join("");
+  }
+  $("#wz-back").onclick = () => { if (W.step > 1) wizShow(W.step - 1); };
+  $("#wz-cancel").onclick = () => wz.close();
+  $("#wz-next").onclick = () => {
+    const err = $("#wz-err");
+    if (W.step === 1) { wizData(); if (!W.ds) { err.textContent = "Cole uma tabela válida (ou use os dados de exemplo) para continuar."; $("#wz-text").focus(); return; } wizShow(2); $("#wz-title").focus(); return; }
+    if (W.step === 2) { if (!$("#wz-title").value.trim()) { err.textContent = "Dê um título ao relatório."; $("#wz-title").focus(); return; } wizShow(3); const f = $("#wz-opts input:not([disabled])"); if (f) f.focus(); return; }
+    if (W.step === 3) {
+      wizRead();
+      if (!(W.kpi.on || W.chart.on || W.table.on || W.text.on)) { err.textContent = "Marque ao menos uma opção para o relatório."; return; }
+      if (W.kpi.on && !Object.keys(W.kpi.cols).length) { err.textContent = "Escolha ao menos uma coluna para os indicadores, ou desmarque “Incluir indicadores”."; return; }
+      if (Object.keys(W.kpi.cols).length > 4) { err.textContent = "No máximo 4 indicadores."; return; }
+      if (W.chart.on && !W.chart.y.length) { err.textContent = "Escolha ao menos uma coluna de valores para o gráfico, ou desmarque “Incluir gráfico”."; return; }
+      if (W.chart.y.length > 4) { err.textContent = "No máximo 4 colunas de valores no gráfico."; return; }
+      if (W.table.on && !W.table.cols.length) { err.textContent = "Escolha ao menos uma coluna para a tabela, ou desmarque “Incluir tabela”."; return; }
+      wizShow(4); $("#wz-next").focus(); return;
+    }
+    const doc = { theme: "editorial", data: W.ds, blocks: wizBlocks() }, op = W.opener; wz.close();
+    open(doc, false, "Relatório criado pelo assistente. Toque em cada bloco para ajustar.");
+  };
+  wz.addEventListener("close", () => { if (W && W.opener && W.opener.isConnected && !$("#start").hidden) W.opener.focus(); });
   $("#resume").onclick = () => { const d = T.get("draft", null); const v = d && validate({ app: "relatorio-facil", doc: d.doc }); if (v && v.ok) open(v.doc, false, "Rascunho restaurado."); else showAlert("Não consegui restaurar o rascunho."); };
 
   function open(doc, sample, msg) {
@@ -297,7 +452,7 @@
     if (f.size > 8 * 1048576) { showAlert(`“${f.name}” é grande demais para ser um projeto.`); return; }
     let obj; try { obj = JSON.parse(await f.text()); } catch { showAlert(`“${f.name}” não é um arquivo JSON válido.`); return; }
     const v = validate(obj); if (!v.ok) { showAlert(v.error); return; }
-    open(v.doc, false, `Projeto “${f.name}” aberto.`);
+    open(v.doc, obj.kind === "template", obj.kind === "template" ? `Modelo “${f.name}” aberto. Cole os seus dados em “Editar dados”. Use “Salvar como modelo” para guardá-lo em Meus modelos.` : `Projeto “${f.name}” aberto.`);
   };
 
   /* ---------- Exportar ---------- */
@@ -328,7 +483,7 @@
     if (!confirm("Voltar ao início? O rascunho continua salvo neste navegador.")) return;
     S.doc = null; $("#editor").hidden = true; $("#start").hidden = false; buildStart(); $("#tpls .tpl").focus();
   };
-  $("#resetdata").onclick = () => { if (confirm("Isso remove o rascunho e as preferências desta ferramenta neste navegador. Continuar?")) { T.clear(); S.draftFail = false; setDraftStatus(""); buildStart(); T.toast("Dados apagados."); } };
+  $("#resetdata").onclick = () => { if (confirm("Isso remove o rascunho, os modelos salvos e as preferências desta ferramenta neste navegador. Continuar?")) { T.clear(); S.draftFail = false; setDraftStatus(""); buildStart(); T.toast("Dados apagados."); } };
   $("#y").textContent = new Date().getFullYear();
 
   buildStart();

@@ -30,9 +30,19 @@
   <p class="lead">Transforme uma planilha em um relatório com indicadores, gráficos e tabelas, pronto para PDF. Seus dados não saem do seu aparelho.</p>
   <div id="alert" class="state error" role="alert" hidden></div>
 
-  <!-- Início: escolher um modelo -->
+  <!-- Início: escolher como começar -->
   <section id="start" aria-labelledby="start-h">
-    <h2 id="start-h" class="sec">Comece por um modelo</h2>
+    <h2 id="start-h" class="sec">Como você quer começar?</h2>
+    <div id="modes" class="tpls modes">
+      <button class="tpl" type="button" data-mode="wizard"><div class="mini ico" aria-hidden="true"><s style="height:30%"></s><s style="height:55%"></s><s style="height:80%"></s></div><b>Assistente passo a passo</b><span>Responda 4 perguntas curtas (dados, título, o que destacar) e o relatório é montado para você.</span><i>Começar →</i></button>
+      <button class="tpl" type="button" data-tpl="branco"><div class="mini ico" aria-hidden="true"></div><b>Montar do zero</b><span>Você escolhe cada bloco (título, texto, indicadores, tabela, gráfico, quebra de página) e a ordem em que aparecem.</span><i>Começar →</i></button>
+    </div>
+    <section id="mytpls" aria-labelledby="my-h" hidden>
+      <h2 id="my-h" class="sec">Meus modelos</h2>
+      <p class="muted">Modelos que você salvou. Abra um, cole os dados novos e o relatório se refaz.</p>
+      <div id="mylist" class="tpls"></div>
+    </section>
+    <h2 class="sec">Ou parta de um modelo pronto</h2>
     <p class="muted">Cada modelo já vem preenchido com dados de exemplo. Depois é só colar os seus.</p>
     <div id="tpls" class="tpls"></div>
     <div class="row startrow">
@@ -49,6 +59,7 @@
       <button id="undo" class="btn" type="button">Desfazer</button>
       <button id="redo" class="btn" type="button">Refazer</button>
       <span class="sep" aria-hidden="true"></span>
+      <button id="savetpl" class="btn" type="button" aria-label="Salvar como modelo para reutilizar">Salvar como modelo</button>
       <button id="savejson" class="btn" type="button" aria-label="Salvar projeto (arquivo .json)">Salvar projeto</button>
       <button id="exphtml" class="btn" type="button" aria-label="Baixar versão HTML (acessível)">Baixar HTML</button>
       <button id="exppdf" class="btn primary" type="button" aria-label="Baixar PDF (abre a impressão)">Baixar PDF</button>
@@ -111,18 +122,60 @@
   <div class="row"><button id="dapply" class="btn primary" type="button">Usar estes dados</button><button id="dcancel" class="btn" type="button">Cancelar</button></div>
 </dialog>
 
+<!-- Assistente passo a passo -->
+<dialog id="wizdlg" class="ddlg wiz" aria-labelledby="wz-h">
+  <h2 id="wz-h" class="sec" tabindex="-1">Assistente <small id="wz-step" class="muted"></small></h2>
+  <div class="wz-pane" data-step="1">
+    <h3>1. Seus dados</h3>
+    <p class="muted">Cole uma tabela copiada do Excel ou do Google Planilhas, ou escolha um arquivo CSV. A primeira linha é o cabeçalho.</p>
+    <div class="row"><button id="wz-pick" class="btn" type="button">Escolher arquivo CSV</button><button id="wz-example" class="btn" type="button">Usar dados de exemplo</button></div>
+    <div class="field"><label for="wz-text">Tabela</label><textarea id="wz-text" rows="8" spellcheck="false" aria-describedby="wz-status"></textarea></div>
+    <p id="wz-status" class="dstatus" role="status"></p>
+  </div>
+  <div class="wz-pane" data-step="2" hidden>
+    <h3>2. Sobre o relatório</h3>
+    <div class="field"><label for="wz-title">Título</label><input id="wz-title" autocomplete="off" placeholder="Ex.: Resultados de agosto"></div>
+    <div class="field"><label for="wz-sub">Subtítulo (opcional)</label><input id="wz-sub" autocomplete="off"></div>
+    <div class="field"><label for="wz-author">Autor (opcional)</label><input id="wz-author" autocomplete="off"></div>
+    <div class="field"><label for="wz-date">Data ou período (opcional)</label><input id="wz-date" autocomplete="off"></div>
+    <label class="chk"><input id="wz-cover" type="checkbox"> Capa em página inteira</label>
+  </div>
+  <div class="wz-pane" data-step="3" hidden>
+    <h3>3. O que destacar</h3>
+    <p class="muted">Marque o que o relatório deve ter. Você ajusta tudo depois no editor.</p>
+    <div id="wz-opts" class="wz-opts"></div>
+  </div>
+  <div class="wz-pane" data-step="4" hidden>
+    <h3>4. Revisão</h3>
+    <p class="muted">O relatório será criado com:</p>
+    <ul id="wz-review" class="wz-review"></ul>
+  </div>
+  <p id="wz-err" class="dstatus err" role="alert"></p>
+  <div class="row"><button id="wz-back" class="btn" type="button">Voltar</button><button id="wz-next" class="btn primary" type="button">Próximo</button><button id="wz-cancel" class="btn" type="button">Cancelar</button></div>
+</dialog>
+
+<!-- Salvar como modelo -->
+<dialog id="tpldlg" class="ddlg" aria-labelledby="tp-h">
+  <h2 id="tp-h" class="sec">Salvar como modelo</h2>
+  <p class="muted">Guarda a estrutura (blocos, gráficos, tema) neste navegador. Os dados atuais ficam como exemplo; depois é só colar os novos.</p>
+  <div class="field"><label for="tp-name">Nome do modelo</label><input id="tp-name" autocomplete="off" maxlength="60"></div>
+  <p id="tp-err" class="dstatus err" role="alert"></p>
+  <div class="row"><button id="tp-save" class="btn primary" type="button">Salvar modelo</button><button id="tp-cancel" class="btn" type="button">Cancelar</button></div>
+</dialog>
+
 <p id="live" class="sr-only" aria-live="polite"></p>
+<input id="wzfile" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden tabindex="-1" aria-label="Escolher arquivo CSV para o assistente">
 <input id="csvfile" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden tabindex="-1" aria-label="Escolher arquivo CSV">
 <input id="projfile" type="file" accept=".json,application/json" hidden tabindex="-1" aria-label="Abrir projeto salvo">
 
 <script>
   window.VF_BASE = "https://vitorfariasvf.github.io/VF-Tools/";
   window.VFTour = { what: "esta ferramenta", steps: [
-    { sel: "#tpls", pose: "busca", text: "Escolha um modelo. Ele já vem com dados de exemplo para você ver o relatório pronto." },
+    { sel: "#modes", pose: "busca", text: "Escolha como começar: o assistente passo a passo, montar do zero, ou um modelo pronto (mais abaixo) com dados de exemplo." },
     { sel: "#editdata", pose: "acao", text: "Cole aqui a sua planilha. Indicadores, tabelas e gráficos se atualizam sozinhos." },
     { sel: "#blocks", pose: "cats", text: "O relatório é feito de blocos. Toque num bloco para editar e use Subir, Descer ou Posição para organizar." },
     { sel: "#pane-sheet", pose: "amor", text: "Aqui está a folha A4, ao vivo. As linhas tracejadas mostram onde a página costuma terminar." },
-    { sel: "#exppdf", pose: "tema", text: "Baixe o PDF pela janela de impressão ou o HTML, que é mais acessível. O projeto (.json) guarda tudo para continuar depois." },
+    { sel: "#exppdf", pose: "tema", text: "Baixe o PDF pela janela de impressão ou o HTML, que é mais acessível. Use “Salvar como modelo” para reaproveitar a estrutura e só trocar os dados." },
     { sel: ".foot", pose: "fim", text: "Seus dados nunca saem daqui. Bom relatório!" }
   ] };
 </script>

@@ -96,3 +96,29 @@
   .sheetscale .sheet{box-shadow:none;background-image:none!important}
   .layout[data-tab] .pane-sheet{display:block!important}
 }
+
+/* Início: modos e meus modelos */
+.modes .tpl .ico{height:56px}
+.modes .tpl{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.myc{display:flex;flex-direction:column;gap:var(--s2);padding:var(--s4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg,16px)}
+.myc b{font:500 1.25rem var(--font-display);overflow-wrap:anywhere}
+.myc span{color:var(--muted);font-size:.85rem}
+.myc .row{margin-top:auto}
+.myc .btn{min-height:44px;padding:0 var(--s3);font-size:.85rem}
+
+/* Assistente */
+.wiz h3{margin:0 0 var(--s2);font:500 1.25rem var(--font-display)}
+.wiz .wz-pane{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3);margin-bottom:var(--s3)}
+.wiz .chk{display:flex;align-items:center;gap:var(--s2);min-height:44px}
+.wiz .chk input{width:20px;height:20px;accent-color:var(--accent)}
+.wz-opts{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3)}
+.wz-opts fieldset{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s3);margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2)}
+.wz-opts legend{font-weight:600;padding:0 var(--s2)}
+.wz-opts .sub{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2);padding-left:var(--s4);border-left:2px solid var(--line)}
+.wz-opts .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.wz-review{margin:0 0 var(--s3);padding-left:var(--s5);display:grid;gap:var(--s2)}
+@media(max-width:560px){.wz-opts .two{grid-template-columns:1fr}}
+
+/* Folga no fim da página: o botão flutuante do Doggy não cobre o rodapé */
+.foot{padding-bottom:calc(var(--s5) + 76px)}
+html{scroll-padding-bottom:104px}
