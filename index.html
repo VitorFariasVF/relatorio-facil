@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark" data-tool="relatorio-facil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório Fácil — VF Tools</title>
+<meta name="description" content="Transforme uma planilha em um relatório com indicadores, gráficos e tabelas, pronto para PDF. Tudo no navegador.">
+<meta name="theme-color" content="#14110f">
+<link rel="icon" href="https://vitorfariasvf.github.io/VF-Tools/assets/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Relatório Fácil — VF Tools">
+<meta property="og:description" content="Da planilha ao relatório pronto, no navegador. Seus dados não saem do seu aparelho.">
+<script>try{var s=JSON.parse(localStorage.getItem("vf-tools:relatorio-facil:v1")||"{}").theme||JSON.parse(localStorage.getItem("vf-tools:v1")||"{}").theme;if(s)document.documentElement.dataset.theme=s}catch(e){}</script>
+<link rel="stylesheet" href="https://vitorfariasvf.github.io/VF-Tools/tokens.css">
+<link rel="stylesheet" href="https://vitorfariasvf.github.io/VF-Tools/components.css">
+<link rel="stylesheet" href="https://vitorfariasvf.github.io/VF-Tools/doggy.css">
+<link rel="stylesheet" href="report.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<a class="skip" href="#main">Ir para o conteúdo</a>
+
+<header class="top wrap wide">
+  <a class="back" href="https://vitorfariasvf.github.io/VF-Tools/" aria-label="Voltar para VF Tools"><span>← VF<i style="color:var(--accent);font-style:normal">.</i>Tools</span></a>
+  <button id="theme" class="icon-btn" aria-label="Alternar tema claro/escuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+</header>
+
+<main id="main" class="wrap wide">
+  <h1 class="title">Relatório <em>Fácil</em></h1>
+  <p class="lead">Transforme uma planilha em um relatório com indicadores, gráficos e tabelas, pronto para PDF. Seus dados não saem do seu aparelho.</p>
+  <div id="alert" class="state error" role="alert" hidden></div>
+
+  <!-- Início: escolher um modelo -->
+  <section id="start" aria-labelledby="start-h">
+    <h2 id="start-h" class="sec">Comece por um modelo</h2>
+    <p class="muted">Cada modelo já vem preenchido com dados de exemplo. Depois é só colar os seus.</p>
+    <div id="tpls" class="tpls"></div>
+    <div class="row startrow">
+      <button id="resume" class="btn" type="button" hidden>Continuar o rascunho</button>
+      <button id="openproj" class="btn" type="button">Abrir projeto (.json)</button>
+    </div>
+    <p class="privacy"><strong>Seus dados não saem do seu aparelho.</strong> Tudo acontece aqui no navegador, sem envio e sem cadastro. Não acredita? Abra a página, desligue a internet e teste.</p>
+  </section>
+
+  <!-- Editor -->
+  <section id="editor" hidden aria-label="Editor do relatório">
+    <div class="ebar" role="toolbar" aria-label="Relatório" id="ebar">
+      <button id="newdoc" class="btn" type="button">Novo</button>
+      <button id="undo" class="btn" type="button">Desfazer</button>
+      <button id="redo" class="btn" type="button">Refazer</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="savejson" class="btn" type="button" aria-label="Salvar projeto (arquivo .json)">Salvar projeto</button>
+      <button id="exphtml" class="btn" type="button" aria-label="Baixar versão HTML (acessível)">Baixar HTML</button>
+      <button id="exppdf" class="btn primary" type="button" aria-label="Baixar PDF (abre a impressão)">Baixar PDF</button>
+    </div>
+    <p id="draftst" class="muted draftst" role="status"></p>
+    <p class="muted pdfhint">Para o PDF, escolha “Salvar como PDF” na janela de impressão (no celular: Compartilhar › Imprimir). O HTML é a versão mais acessível.</p>
+    <p id="sample" class="hint-box" hidden>Estes são dados de exemplo. Toque em “Editar dados” para colar os seus: os indicadores, tabelas e gráficos se atualizam sozinhos.</p>
+
+    <div class="tabs" id="tabs" role="tablist" aria-label="Painéis do editor">
+      <button id="tab-edit" class="tab" type="button" role="tab" aria-selected="true" aria-controls="pane-edit">Editar</button>
+      <button id="tab-sheet" class="tab" type="button" role="tab" aria-selected="false" aria-controls="pane-sheet">Folha</button>
+    </div>
+
+    <div class="layout" id="layout" data-tab="edit">
+      <div id="pane-edit" class="pane-edit" role="tabpanel" aria-labelledby="tab-edit">
+        <section class="card" aria-labelledby="data-h">
+          <h2 id="data-h" class="sec">Dados</h2>
+          <p id="dsum" class="muted"></p>
+          <button id="editdata" class="btn" type="button">Editar dados</button>
+        </section>
+        <section class="card" aria-labelledby="blocks-h" id="blocks">
+          <h2 id="blocks-h" class="sec">Blocos do relatório</h2>
+          <ol id="blist" class="blist"></ol>
+          <div class="addbar" role="group" aria-label="Adicionar bloco">
+            <button class="btn" type="button" data-add="title">+ Título</button>
+            <button class="btn" type="button" data-add="text">+ Texto</button>
+            <button class="btn" type="button" data-add="kpi">+ Indicadores</button>
+            <button class="btn" type="button" data-add="table">+ Tabela</button>
+            <button class="btn" type="button" data-add="chart">+ Gráfico</button>
+            <button class="btn" type="button" data-add="break">+ Quebra de página</button>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="look-h">
+          <h2 id="look-h" class="sec">Aparência da folha</h2>
+          <div class="field"><label for="themesel">Tema</label>
+            <select id="themesel"><option value="editorial">Editorial (âmbar)</option><option value="sobrio">Sóbrio (azul-grafite)</option></select></div>
+        </section>
+      </div>
+
+      <div id="pane-sheet" class="pane-sheet" role="tabpanel" aria-labelledby="tab-sheet">
+        <div id="sheetwrap" class="sheetwrap"><div id="sheetscale" class="sheetscale"></div></div>
+        <p class="muted sheetnote">As linhas tracejadas mostram onde uma página A4 costuma terminar. Use “Quebra de página” para controlar.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wrap wide">
+  <span>© <span id="y"></span> Vitor Farias · <a href="https://github.com/VitorFariasVF">GitHub</a> · <a href="https://github.com/VitorFariasVF/VF-Tools/issues">Reportar problema</a></span>
+  <span>Seus dados não são enviados. O rascunho fica só neste navegador. <button class="link" id="resetdata" type="button">Limpar meus dados</button></span>
+</footer>
+
+<dialog id="datadlg" class="ddlg" aria-labelledby="dd-h">
+  <h2 id="dd-h" class="sec">Dados do relatório</h2>
+  <p class="muted">Cole aqui uma tabela copiada do Excel ou do Google Planilhas, ou escolha um arquivo CSV. A primeira linha é o cabeçalho. Para corrigir uma célula, edite o texto abaixo.</p>
+  <div class="row"><button id="pickcsv" class="btn" type="button">Escolher arquivo CSV</button></div>
+  <div class="field"><label for="dtext">Tabela</label><textarea id="dtext" rows="9" spellcheck="false" aria-describedby="dstatus"></textarea></div>
+  <p id="dstatus" class="dstatus" role="status"></p>
+  <div id="dprev" class="dprev" aria-label="Pré-visualização dos dados"></div>
+  <div class="row"><button id="dapply" class="btn primary" type="button">Usar estes dados</button><button id="dcancel" class="btn" type="button">Cancelar</button></div>
+</dialog>
+
+<p id="live" class="sr-only" aria-live="polite"></p>
+<input id="csvfile" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden tabindex="-1" aria-label="Escolher arquivo CSV">
+<input id="projfile" type="file" accept=".json,application/json" hidden tabindex="-1" aria-label="Abrir projeto salvo">
+
+<script>
+  window.VF_BASE = "https://vitorfariasvf.github.io/VF-Tools/";
+  window.VFTour = { what: "esta ferramenta", steps: [
+    { sel: "#tpls", pose: "busca", text: "Escolha um modelo. Ele já vem com dados de exemplo para você ver o relatório pronto." },
+    { sel: "#editdata", pose: "acao", text: "Cole aqui a sua planilha. Indicadores, tabelas e gráficos se atualizam sozinhos." },
+    { sel: "#blocks", pose: "cats", text: "O relatório é feito de blocos. Toque num bloco para editar e use Subir, Descer ou Posição para organizar." },
+    { sel: "#pane-sheet", pose: "amor", text: "Aqui está a folha A4, ao vivo. As linhas tracejadas mostram onde a página costuma terminar." },
+    { sel: "#exppdf", pose: "tema", text: "Baixe o PDF pela janela de impressão ou o HTML, que é mais acessível. O projeto (.json) guarda tudo para continuar depois." },
+    { sel: ".foot", pose: "fim", text: "Seus dados nunca saem daqui. Bom relatório!" }
+  ] };
+</script>
+<script src="tool.js"></script>
+<script src="https://vitorfariasvf.github.io/VF-Tools/dog.js"></script>
+<script src="https://vitorfariasvf.github.io/VF-Tools/help.js"></script>
+<script src="data.js"></script>
+<script src="charts.js"></script>
+<script src="report.js"></script>
+<script src="templates.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+/* Relatório Fácil — interface do editor. Só tokens do VF Tools. A folha (report.css) tem as próprias cores de papel. */
+[hidden]{display:none!important}
+.wide{max-width:1240px}
+.muted{color:var(--muted)}
+.privacy{max-width:60ch;margin:var(--s5) 0 0;color:var(--muted);font-size:.9rem}.privacy strong{color:var(--text)}
+.hint-box{margin:0 0 var(--s4);padding:var(--s3) var(--s4);border:1px solid var(--accent);border-radius:var(--r-md);color:var(--text);font-size:.92rem}
+.draftst{margin:var(--s2) 0 0;font-size:.85rem;min-height:1.3em}
+.pdfhint{margin:0 0 var(--s4);font-size:.85rem;max-width:80ch}
+.row{display:flex;gap:var(--s3);flex-wrap:wrap;align-items:center}
+
+/* Início */
+.tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--s4);margin:var(--s4) 0}
+.tpl{display:flex;flex-direction:column;gap:var(--s2);text-align:left;padding:var(--s5);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg,16px);color:inherit;font:inherit;cursor:pointer;transition:border-color var(--dur),transform var(--dur) var(--ease)}
+.tpl:hover{border-color:var(--accent);transform:translateY(-2px)}
+.tpl:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.tpl b{font:500 1.35rem var(--font-display)}
+.tpl span{color:var(--muted);font-size:.92rem;flex:1}
+.tpl i{font-style:normal;color:var(--accent);font-weight:600;font-size:.9rem}
+.tpl .mini{height:56px;border:1px solid var(--line);border-radius:var(--r-sm);background:#fffdf8;display:flex;gap:6px;padding:8px;align-items:flex-end}
+.tpl .mini s{display:block;flex:1;background:#8a5200;opacity:.85;border-radius:2px 2px 0 0}
+.startrow{margin-top:var(--s3)}
+
+/* Barra do editor */
+.ebar{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center;padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+.ebar .sep{width:1px;height:28px;background:var(--line);margin:0 var(--s1)}
+.ebar .btn:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:700px){.ebar{flex-wrap:nowrap;overflow-x:auto;margin-inline:calc(var(--s4)*-1);padding-inline:var(--s4);scrollbar-width:none}.ebar::-webkit-scrollbar{display:none}.ebar .btn,.ebar .sep{flex:none}}
+
+/* Abas (celular) e layout */
+.tabs{display:none;gap:var(--s2);margin:var(--s3) 0}
+.tab{flex:1;min-height:44px;font:600 .95rem var(--font);color:var(--text);background:transparent;border:1px solid var(--line);border-radius:var(--r-pill);cursor:pointer}
+.tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.layout{display:grid;grid-template-columns:minmax(340px,430px) minmax(0,1fr);gap:var(--s5);align-items:start;margin-top:var(--s4);padding-bottom:var(--s8)}
+.pane-edit{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s4);min-width:0}
+.pane-sheet{position:sticky;top:var(--s3);max-height:calc(100vh - 24px);overflow:auto;min-width:0;border:1px solid var(--line);border-radius:var(--r-lg,16px);background:color-mix(in srgb,var(--surface) 60%,var(--bg));padding:var(--s4)}
+.sheetwrap{width:100%;overflow:hidden}
+.sheetscale{width:794px;transform-origin:top left}
+.sheetscale .sheet{box-shadow:0 6px 26px rgba(0,0,0,.35)}
+.sheet.preview{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 1122px,rgba(60,40,10,.35) 1122px,rgba(60,40,10,.35) 1123px)}
+.sheetnote{font-size:.8rem;margin:var(--s3) 0 0}
+@media(max-width:979px){
+  .tabs{display:flex}
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .layout[data-tab=edit] .pane-sheet{display:none}
+  .layout[data-tab=sheet] .pane-edit{display:none}
+  .pane-sheet{position:static;max-height:none;overflow:visible;padding:var(--s2)}
+}
+
+/* Cartões e lista de blocos */
+.card{padding:var(--s4)}.card .sec{margin:0 0 var(--s3);font-size:1.2rem}
+.blist{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2)}
+.bl{border:1px solid var(--line);border-radius:var(--r-md);background:var(--bg)}
+.bl.open{border-color:var(--accent)}
+.bhead{display:flex;flex-direction:column;gap:var(--s1)}
+.bsel{display:flex;align-items:center;gap:var(--s3);width:100%;min-height:48px;padding:var(--s2) var(--s3);background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;border-radius:var(--r-md)}
+.bsel:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.bn{font:500 1.1rem var(--font-display);color:var(--muted);min-width:1.6em}
+.bt{font-weight:600}.bs{color:var(--muted);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.bact{display:flex;gap:var(--s1);flex-wrap:wrap;padding:0 var(--s3) var(--s2)}
+.bact .btn{min-height:44px;padding:0 var(--s3);font-size:.8rem}
+.bact .danger{margin-left:auto}
+.bform{padding:var(--s3);border-top:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3)}
+.bform .field{margin:0}
+.bform fieldset{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s3);margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2)}
+.bform legend{font-weight:600;font-size:.9rem;padding:0 var(--s2)}
+.bform .chk{display:flex;align-items:center;gap:var(--s2);min-height:44px}
+.bform .chk input{width:20px;height:20px;accent-color:var(--accent)}
+.kitem{border:1px dashed var(--line);border-radius:var(--r-md);padding:var(--s3);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s2)}
+.kitem .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.addbar{display:flex;gap:var(--s2);flex-wrap:wrap}
+.addbar .btn{min-height:44px;padding:0 var(--s3);font-size:.85rem}
+.field select,.field input[type=number]{min-height:44px}
+.field textarea{min-height:120px}
+
+/* Diálogo de dados */
+.ddlg{width:min(94vw,760px);max-height:94vh;overflow:auto;padding:var(--s5);border:1px solid var(--accent);border-radius:var(--r-lg,16px);background:var(--surface);color:var(--text)}
+.ddlg::backdrop{background:rgba(8,6,4,.78)}
+.ddlg textarea{font:.85rem/1.4 ui-monospace,Menlo,Consolas,monospace;min-height:180px}
+.dstatus{min-height:1.4em;margin:0 0 var(--s3);font-size:.9rem}
+.dstatus.err{color:var(--danger)}.dstatus.ok{color:var(--ok)}
+.dprev{overflow:auto;max-height:200px;margin-bottom:var(--s4);border:1px solid var(--line);border-radius:var(--r-md)}
+.dprev table{border-collapse:collapse;width:100%;font-size:.8rem}
+.dprev th,.dprev td{padding:var(--s1) var(--s2);border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.dprev th{background:var(--bg);position:sticky;top:0}
+
+/* Impressão: só a folha */
+@media print{
+  :root,:root[data-theme]{color-scheme:light!important}
+  html,body{background:#fff!important}
+  .skip,.top,.title,.lead,#alert,#start,.ebar,.draftst,.pdfhint,#sample,.tabs,.pane-edit,.sheetnote,.foot,.help,.toast,.ddlg,#live{display:none!important}
+  .wrap{max-width:none;padding:0;margin:0}
+  .layout{display:block;margin:0;padding:0}
+  .pane-sheet,.pane-sheet[hidden]{display:block!important;position:static;max-height:none;overflow:visible;border:0;background:none;padding:0}
+  .sheetwrap{overflow:visible!important;height:auto!important}
+  .sheetscale{transform:none!important;width:auto!important;height:auto!important}
+  .sheetscale .sheet{box-shadow:none;background-image:none!important}
+  .layout[data-tab] .pane-sheet{display:block!important}
+}

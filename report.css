@@ -1,0 +1,50 @@
+/* Relatório Fácil — a "folha" A4. Sempre clara (também no tema escuro do site), com tema Editorial ou Sóbrio. */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.sheet{--paper:#fffdf8;--ink:#201a14;--muted:#5e5446;--line:#ddd2c0;--accent:#8a5200;
+  box-sizing:border-box;width:794px;padding:56px;background:var(--paper);color:var(--ink);
+  font:11pt/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.sheet[data-theme=sobrio]{--accent:#2f4a6d;--line:#d3d9e1}
+.sheet *{box-sizing:border-box}
+.sheet .blk{margin:0 0 26px}
+.sheet h1,.sheet h2,.kpi .v{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-weight:500;letter-spacing:-.01em}
+.sheet h1{font-size:30pt;line-height:1.08;margin:0 0 10px}
+.sheet h2{font-size:15pt;line-height:1.2;margin:0 0 10px}
+.sheet p{margin:0 0 9px}.sheet ul{margin:0 0 9px;padding-left:20px}.sheet li{margin:0 0 3px}
+.sheet .muted,.sheet .note{color:var(--muted)}.sheet .note{font-size:9pt}
+.sheet .warn{color:#8f1d1d;font-size:9.5pt}
+
+.b-title::before{content:"";display:block;width:56px;height:5px;background:var(--accent);margin-bottom:18px}
+.b-title .sub{font-size:14pt;color:var(--muted);margin:0 0 8px}
+.b-title .meta{font-size:10pt;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0}
+.b-title.cover{min-height:600px;display:flex;flex-direction:column;justify-content:center}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:18px;margin:0}
+.kpi{border-top:2px solid var(--accent);padding-top:8px}
+.kpi dt{font-size:8.5pt;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi dd{margin:0}.kpi .v{font-size:24pt;line-height:1.1;margin-top:2px}.kpi .note{font-size:9pt;color:var(--muted)}
+
+.b-table table{width:100%;border-collapse:collapse;font-size:10pt}
+.b-table th{text-align:left;font-weight:600;border-bottom:2px solid var(--accent);padding:6px 8px;font-size:9pt;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.b-table td{padding:6px 8px;border-bottom:1px solid var(--line)}
+.b-table .n{text-align:right;font-variant-numeric:tabular-nums}
+
+.b-chart{margin-left:0;margin-right:0}
+.chart-svg{display:block;width:100%;height:auto;border:1px solid var(--line)}
+.b-chart figcaption{font-size:9pt;color:var(--muted);margin-top:6px}
+
+.b-break{height:0;margin:0}
+.sheet.preview .b-break{height:26px;border-top:2px dashed var(--line);position:relative;margin-bottom:26px}
+.sheet.preview .b-break::after{content:"Quebra de página";position:absolute;right:0;top:4px;font-size:8.5pt;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.sheet.preview .blk.sel{outline:2px solid var(--accent);outline-offset:8px;border-radius:2px}
+
+@page{size:A4;margin:14mm}
+@media print{
+  .sheet{width:auto;padding:0;box-shadow:none}
+  .blk{break-inside:avoid}
+  .b-title.cover{min-height:235mm;break-after:page}
+  .b-break{break-after:page;border:0!important;height:0!important;margin:0!important}
+  .b-break::after{display:none!important}
+  .b-table table{break-inside:auto}.b-table tr{break-inside:avoid}.b-table thead{display:table-header-group}
+  .chart-svg,.kpi{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet.preview .blk.sel{outline:0}
+}
